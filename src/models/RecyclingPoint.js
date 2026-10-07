@@ -34,7 +34,7 @@ const recyclingPointSchema = new mongoose.Schema({
   },
   acceptedCategories: {
     type: [String],
-    enum: ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro'],
+    enum: ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro', 'madera', 'especiales', 'organicos'],
     default: ['plastico', 'papel', 'vidrio']
   },
   schedule: {

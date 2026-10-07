@@ -1,7 +1,7 @@
 // backend/src/validators/item.validator.js
 const { z } = require('zod');
 
-const validCategories = ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro'];
+const validCategories = ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro', 'madera', 'especiales', 'organicos'];
 const validStates = ['sin_procesar', 'en_proceso', 'fardado', 'validado'];
 
 const createItemSchema = z.object({
@@ -19,7 +19,34 @@ const createItemSchema = z.object({
     .max(90, 'Latitud debe estar entre -90 y 90.'),
   lng: z.coerce.number({ required_error: 'La longitud es requerida.' })
     .min(-180, 'Longitud debe estar entre -180 y 180.')
-    .max(180, 'Longitud debe estar entre -180 y 180.')
+    .max(180, 'Longitud debe estar entre -180 y 180.'),
+  isFree: z.preprocess((val) => {
+    if (val === undefined || val === null || val === '') return true;
+    if (typeof val === 'string') return val === 'true' || val === '1';
+    return Boolean(val);
+  }, z.boolean()).default(true),
+  price: z.preprocess((val) => {
+    if (val === undefined || val === null || val === '') return 0;
+    return Number(val);
+  }, z.number().min(0, 'El precio no puede ser negativo.')).default(0)
+}).superRefine((data, ctx) => {
+  if (data.isFree) {
+    if (data.price !== undefined && data.price !== null && data.price > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Si la publicación es gratis, el precio debe ser 0.',
+        path: ['price']
+      });
+    }
+  } else {
+    if (data.price === undefined || data.price === null || data.price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Si la publicación no es gratis, el precio debe ser mayor a 0.',
+        path: ['price']
+      });
+    }
+  }
 });
 
 const updateItemSchema = z.object({
@@ -29,7 +56,33 @@ const updateItemSchema = z.object({
   address: z.string().trim().max(250).optional(),
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
-  keepImages: z.union([z.string(), z.array(z.string())]).optional()
+  keepImages: z.union([z.string(), z.array(z.string())]).optional(),
+  isFree: z.preprocess((val) => {
+    if (val === undefined || val === null || val === '') return undefined;
+    if (typeof val === 'string') return val === 'true' || val === '1';
+    return Boolean(val);
+  }, z.boolean()).optional(),
+  price: z.preprocess((val) => {
+    if (val === undefined || val === null || val === '') return undefined;
+    return Number(val);
+  }, z.number().min(0, 'El precio no puede ser negativo.')).optional()
+}).superRefine((data, ctx) => {
+  if (data.isFree !== undefined) {
+    if (data.isFree && data.price !== undefined && data.price > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Si la publicación es gratis, el precio debe ser 0.',
+        path: ['price']
+      });
+    }
+    if (!data.isFree && data.price !== undefined && data.price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Si la publicación no es gratis, el precio debe ser mayor a 0.',
+        path: ['price']
+      });
+    }
+  }
 });
 
 const searchItemsQuerySchema = z.object({

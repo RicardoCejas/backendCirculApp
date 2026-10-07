@@ -1,6 +1,6 @@
 const { z } = require('zod');
 
-const validCategories = ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro'];
+const validCategories = ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro', 'madera', 'especiales', 'organicos'];
 const validStatuses = ['activo', 'inactivo', 'mantenimiento'];
 
 const createRecyclingPointSchema = z.object({

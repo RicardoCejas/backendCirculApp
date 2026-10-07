@@ -6,8 +6,17 @@ const itemSchema = new mongoose.Schema({
   description: String,
   category: {
     type: String,
-    enum: ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro'],
+    enum: ['plastico', 'papel', 'vidrio', 'metal', 'textil', 'electronico', 'otro', 'madera', 'especiales', 'organicos'],
     required: true
+  },
+  isFree: {
+    type: Boolean,
+    default: true
+  },
+  price: {
+    type: Number,
+    default: 0,
+    min: 0
   },
   processingState: {
     type: String,

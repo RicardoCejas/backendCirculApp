@@ -7,7 +7,7 @@ const notificationService = require('../services/notificationService');
 // Crear un nuevo ítem (RF03)
 const createItem = async (req, res) => {
   try {
-    const { title, description, category, lat, lng, address } = req.body;
+    const { title, description, category, lat, lng, address, isFree, price } = req.body;
 
     // Convertir y validar coordenadas
     const latNum = parseFloat(lat);
@@ -31,11 +31,16 @@ const createItem = async (req, res) => {
       return f.path || f.url;
     }) : [];
 
+    const isFreeBool = isFree !== undefined ? Boolean(isFree) : true;
+    const priceNum = !isFreeBool ? (Number(price) || 0) : 0;
+
     const newItem = new Item({
       title,
       description,
       category,
       address: address ? address.trim() : '',
+      isFree: isFreeBool,
+      price: priceNum,
       location: {
         type: 'Point',
         coordinates: [lngNum, latNum]
@@ -173,7 +178,7 @@ const searchItems = async (req, res) => {
 const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, category, address, lat, lng, keepImages } = req.body;
+    const { title, description, category, address, lat, lng, keepImages, isFree, price } = req.body;
 
     const item = await Item.findById(id);
     if (!item) return res.status(404).json({ msg: 'Ítem no encontrado.' });
@@ -192,6 +197,16 @@ const updateItem = async (req, res) => {
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.category = category;
     if (address !== undefined) updateData.address = address;
+    if (isFree !== undefined) {
+      updateData.isFree = Boolean(isFree);
+      if (updateData.isFree) {
+        updateData.price = 0;
+      } else if (price !== undefined) {
+        updateData.price = Number(price) || 0;
+      }
+    } else if (price !== undefined) {
+      updateData.price = Number(price) || 0;
+    }
     if (lat !== undefined && lng !== undefined) {
       const latNum = parseFloat(lat);
       const lngNum = parseFloat(lng);
